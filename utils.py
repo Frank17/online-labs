@@ -56,9 +56,9 @@ def coordinates():
     window = 'Coordinates'
     def show_coords(x, y):
         img = np.zeros((500, 500, 3), np.uint8)
-        cv2.putText(img, 'x: ' + str(x), (20, 480), 0, 0.75, (255, 255, 255), 2)
-        cv2.putText(img, 'y: ' + str(y), (120, 480), 0, 0.75, (255, 255, 255), 2)
-        cv2.putText(img, 'Point: ' + str((x, y)), (220, 480), 0, 0.75, (255, 255, 255), 2)
+        cv2.putText(img, f'x: {str(x)}', (20, 480), 0, 0.75, (255, 255, 255), 2)
+        cv2.putText(img, f'y: {str(y)}', (120, 480), 0, 0.75, (255, 255, 255), 2)
+        cv2.putText(img, f'Point: {(x, y)}', (220, 480), 0, 0.75, (255, 255, 255), 2)
         cv2.imshow(window, img)
     def callback(event, x, y, flags, params):
         if event == cv2.EVENT_MOUSEMOVE:
@@ -87,7 +87,7 @@ def findEdgedImage(image):
     
 def findGreatestContour(contours):
     cnt = [-1, -1]
-    for i in range(0, len(contours)):
+    for i in range(len(contours)):
         if (cv2.contourArea(contours[i]) >= cnt[1]):
             cnt  = [i, cv2.contourArea(contours[i])]
     return contours[cnt[0]]
@@ -155,8 +155,26 @@ def hsv_select(filename):
         hsv_max[2] = cv2.getTrackbarPos('V_max', window_name)
         mask = cv2.inRange(img_hsv, hsv_min, hsv_max)
         img_masked = cv2.bitwise_and(img, img, mask=mask)
-        cv2.putText(img_masked, 'HSV Lower: {}'.format(tuple(hsv_min)), (10, 35), 0, 0.75, (255, 255, 255), 2)
-        cv2.putText(img_masked, 'HSV Upper: {}'.format(tuple(hsv_max)), (10, 70), 0, 0.75, (255, 255, 255), 2)
+        cv2.putText(
+            img_masked,
+            f'HSV Lower: {tuple(hsv_min)}',
+            (10, 35),
+            0,
+            0.75,
+            (255, 255, 255),
+            2,
+        )
+
+        cv2.putText(
+            img_masked,
+            f'HSV Upper: {tuple(hsv_max)}',
+            (10, 70),
+            0,
+            0.75,
+            (255, 255, 255),
+            2,
+        )
+
         cv2.imshow(window_name, img_masked)    
     # make the trackbar used for HSV masking 
     cv2.createTrackbar('H_min', window_name, 0, 179, callback) 
@@ -203,8 +221,26 @@ def hsv_select_live():
             mask = cv2.inRange(img_hsv, hsv_min, hsv_max)
             img_masked = cv2.bitwise_and(frame, frame, mask = mask)
             h,w,ch = frame.shape
-            cv2.putText(img_masked, 'HSV Lower: {}'.format(hsv_min), (10, 35), 0, 0.75, (255, 255, 255), 2)
-            cv2.putText(img_masked, 'HSV Upper: {}'.format(hsv_max), (10, 70), 0, 0.75, (255, 255, 255), 2)
+            cv2.putText(
+                img_masked,
+                f'HSV Lower: {hsv_min}',
+                (10, 35),
+                0,
+                0.75,
+                (255, 255, 255),
+                2,
+            )
+
+            cv2.putText(
+                img_masked,
+                f'HSV Upper: {hsv_max}',
+                (10, 70),
+                0,
+                0.75,
+                (255, 255, 255),
+                2,
+            )
+
             cv2.imshow(window_name, img_masked)  
     def callback(value):
         update()  
@@ -265,9 +301,9 @@ def draw_matches(img, frame, total_keypoints, matches, kp_img, kp_frame):
     '''
     # Number of successful matches
     total_matches = 0
-    
+
     # Need to draw only good matches, so create a mask
-    matchesMask = [[0,0] for i in xrange(len(matches))]
+    matchesMask = [[0,0] for _ in xrange(len(matches))]
 
     # store all the good matches as per Lowe's ratio test.
     good_matches = []
@@ -276,20 +312,30 @@ def draw_matches(img, frame, total_keypoints, matches, kp_img, kp_frame):
             matchesMask[i]=[1,0]
             total_matches += 1
             good_matches.append(m)
-     
+
     # Getting percentages and putting it on screen
     match_percent = round(total_matches/total_keypoints, 3)
-    
-    cv2.putText(frame,'Match:{}'.format(match_percent),(0, 100), 1, 4,(255,255,255), 1, cv2.LINE_AA)
-    
+
+    cv2.putText(
+        frame,
+        f'Match:{match_percent}',
+        (0, 100),
+        1,
+        4,
+        (255, 255, 255),
+        1,
+        cv2.LINE_AA,
+    )
+
+
     # params for drawMatchesKnn
     draw_params = dict(matchColor = (0,255,0),
                    singlePointColor = (255,0,0),
                    matchesMask = matchesMask,
                    flags = 0)
-    
+
     img_matches = cv2.drawMatchesKnn(img, kp_img, frame, kp_frame, matches, None, **draw_params)
-    
+
     return img_matches, total_matches, m, good_matches
 
 #############################
@@ -300,25 +346,25 @@ def get_hough_lines(img):
     '''Returns an array with rho,theta points (Polar Coordinates) for all the lines found in the image'''
     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     edges = cv2.Canny(gray,50,150,apertureSize = 3)
-    lines = cv2.HoughLines(edges,rho = 1, theta = 1*np.pi/180, threshold = 200)
-    return lines
+    return cv2.HoughLines(edges,rho = 1, theta = 1*np.pi/180, threshold = 200)
 
 def draw_hough_lines(img, lines):
     '''Returns the img with hough lines drawn on it.'''
-    if (lines is not None):
-        for x in range(0, len(lines)):
-            for rho, theta in lines[x]:
-                a = np.cos(theta)
-                b = np.sin(theta)
-                x0 = a*rho
-                y0 = b*rho
-                x1 = int(x0 + 1000*(-b)) # X coordinate of point 1
-                y1 = int(y0 + 1000*(a))  # Y coordinate of point 1
-                x2 = int(x0 - 1000*(-b)) # X coordinate of point 2
-                y2 = int(y0 - 1000*(a))  # Y coordinate of point 2
-        
-                # Using the the 2 points defined above, call cv2.line() to draw the line on the image
-                cv2.line(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
+    if lines is None:
+        return
+    for x in range(len(lines)):
+        for rho, theta in lines[x]:
+            a = np.cos(theta)
+            b = np.sin(theta)
+            x0 = a*rho
+            y0 = b*rho
+            x1 = int(x0 + 1000*(-b)) # X coordinate of point 1
+            y1 = int(y0 + 1000*(a))  # Y coordinate of point 1
+            x2 = int(x0 - 1000*(-b)) # X coordinate of point 2
+            y2 = int(y0 - 1000*(a))  # Y coordinate of point 2
+
+            # Using the the 2 points defined above, call cv2.line() to draw the line on the image
+            cv2.line(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
 #############################
 #### Checkerboards
